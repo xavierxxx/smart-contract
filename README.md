@@ -12,13 +12,15 @@ https://github.com/fiinu/smart-contract/blob/master/FiinuCoin.sol
 As of this post, the bug bounty program is considered started. The bounty program will continue even after the token sale.
 
 ## Compensation
-We are using the OWASP risk assessment methodology to determine the bug’s level of threat to the sale.
+We are using the OWASP risk assessment methodology to determine the bug’s level of threat (Severity) to the sale.
 
-- Note: Up to 0.5 FNU ($150 USD)
-- Low: Up to 3 FNU ($900 USD)
-- Medium: Up to 10 FNU ($3000 USD)
-- High: Up to 30 FNU ($9000 USD)
-- Critical: Up to 100 FNU ($30000 USD)
+Severity = BUG Impact (Low(1)|Medium(2)|High(3)) x BUG Likelihood (Low(1)|Medium(2)|High(3))
+
+- Note(1): Up to 0.5 FNU ($150 USD)
+- Low(2): Up to 3 FNU ($900 USD)
+- Medium(4): Up to 10 FNU ($3000 USD)
+- High(6): Up to 30 FNU ($9000 USD)
+- Critical(9): Up to 100 FNU ($30000 USD)
 
 ## Example:
 An attack identified that could steal raised funds would be considered a critical threat.
