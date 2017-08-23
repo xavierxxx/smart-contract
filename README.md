@@ -16,11 +16,11 @@ We are using the OWASP risk assessment methodology to determine the bug’s leve
 
 Severity = BUG Impact (Low(1)|Medium(2)|High(3)) x BUG Likelihood (Low(1)|Medium(2)|High(3))
 
-- Note(1): Up to 0.5 FNU ($150 USD)
-- Low(2): Up to 3 FNU ($900 USD)
-- Medium(4): Up to 10 FNU ($3000 USD)
-- High(6): Up to 30 FNU ($9000 USD)
-- Critical(9): Up to 100 FNU ($30000 USD)
+- Note(1): Up to 0.5 ETH
+- Low(2): Up to 3 ETH
+- Medium(4): Up to 10 ETH
+- High(6): Up to 30 ETH
+- Critical(9): Up to 100 ETH
 
 ## Example:
 An attack identified that could steal raised funds would be considered a critical threat.
