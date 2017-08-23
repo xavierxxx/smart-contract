@@ -67,10 +67,6 @@ contract Milestones is Ownable {
         Milestone(_announcement);
         state = State.ICOclosed;
     }
-    function CompletedICO(string _announcement) onlyOwner inState(State.ICOclosed) {
-        Milestone(_announcement);
-        state = State.ICOcompleted;
-    }
     function ConfirmBankLicense(string _announcement) onlyOwner inState(State.ICOcompleted) {
         Milestone(_announcement);
         tradingOpen = true;
@@ -131,7 +127,7 @@ contract FiinuToken is Investors {
     function FiinuToken(address _wallet) {
         wallet = _wallet;
     }
-    function weiToFNU(uint _wei) constant returns (uint){
+    function weiToFNU(uint _wei) internal constant returns (uint){
         uint _return;
         // 1 FNU = 0.75 ETH
         if(state == State.preICO){
@@ -177,17 +173,18 @@ contract FiinuToken is Investors {
 
         if(!approvedInvestors[_to]) manageInvestors(_to, true);
     }
-    function FiinuStaffAllocation() onlyOwner inState(State.ICOclosed){
+    function CompletedICO(string _announcement) onlyOwner inState(State.ICOclosed){
+        // staff allocation
         uint _toBeAllocated = totalSupply.div(10);
-
         mint(0x123, _toBeAllocated.div(100).mul(81));
         mint(0x123, _toBeAllocated.div(100).mul(9));
         mint(0x123, _toBeAllocated.div(1000).mul(15));
         mint(0x123, _toBeAllocated.div(1000).mul(15));
         mint(owner, _toBeAllocated.div(100).mul(7));
+        Milestone(_announcement);
+        state = State.ICOcompleted;
     }
     function mint(address _to, uint _tokens) internal {
-        require(state == State.preICO || state == State.ICOopen || state == State.ICOclosed);
         totalSupply = totalSupply.add(_tokens);
         balances[_to] = balances[_to].add(_tokens);
         Transfer(0x0, _to, _tokens);
