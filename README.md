@@ -26,7 +26,7 @@ Severity = BUG Impact (Low(1)|Medium(2)|High(3)) x BUG Likelihood (Low(1)|Medium
 An attack identified that could steal raised funds would be considered a critical threat.
 If there was a way for someone to spend more tokens than owned or to mint their own, the bug would be considered a high threat.
 Please note that the submission’s quality will factor into the level of compensation. A high quality submission includes an explanation of how the bug can be reproduced, a failing test case, and a fix that makes the test case pass. High quality submissions may be awarded amounts higher than the amounts specified above.
-Note that bounties will be paid in FNU and that Fiinu team members and paid auditors are not eligible for bounty compensation.
+Note that bounties will be paid in ETH and that Fiinu team members and paid auditors are not eligible for bounty compensation.
 
 # Reporting
 Public disclosure of the bug or indication of an intention to exploit it on the main net will make the report ineligible for a bounty.
