@@ -31,4 +31,5 @@ Note that bounties will be paid in ETH and that Fiinu team members and paid audi
 # Reporting
 Public disclosure of the bug or indication of an intention to exploit it on the main net will make the report ineligible for a bounty.
 
-Please report bug bounty submissions to: security-ico@fiinu.com
+Please report bug bounty submissions to: support@fiinu.com
+Please use subject: Smart contract bounty
