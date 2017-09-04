@@ -45,7 +45,7 @@ contract Ownable {
     }
 }
 contract Milestones is Ownable {
-    enum State { preICO, ICOopen, ICOclosed, ICOcompleted, BankLicense }
+    enum State { preICO, ICOopen, ICOclosed, ICOcompleted, BankLicenseSuccessful, BankLicenseFailed }
     State state;
     bool tradingOpen = false;
     function Milestones(){
@@ -59,18 +59,26 @@ contract Milestones is Ownable {
         require(tradingOpen);
         _;
     }
-    function OpenTheICO(string _announcement) onlyOwner inState(State.preICO) {
+    function Milestone_OpenTheICO(string _announcement) onlyOwner inState(State.preICO) {
         Milestone(_announcement);
         state = State.ICOopen;
     }
-    function CloseTheICO(string _announcement) onlyOwner inState(State.ICOopen) {
+    function Milestone_CloseTheICO(string _announcement) onlyOwner inState(State.ICOopen) {
         Milestone(_announcement);
         state = State.ICOclosed;
     }
-    function ConfirmBankLicense(string _announcement) onlyOwner inState(State.ICOcompleted) {
+    function Milestone_CompletedICO(string _announcement) onlyOwner inState(State.ICOclosed) {
+        Milestone(_announcement);
+        state = State.ICOcompleted;
+    }
+    function Milestone_BankLicenseSuccessful(string _announcement) onlyOwner inState(State.ICOcompleted) {
         Milestone(_announcement);
         tradingOpen = true;
-        state = State.BankLicense;
+        state = State.BankLicenseSuccessful;
+    }
+    function Milestone_BankLicenseFailed(string _announcement) onlyOwner inState(State.ICOcompleted) {
+        Milestone(_announcement);
+        state = State.BankLicenseFailed;
     }
     event Milestone(string announcement);
 }
@@ -106,14 +114,71 @@ contract StandardToken is Milestones, ERC20 {
     }
 }
 contract Investors is StandardToken {
-    mapping(address => bool) approvedInvestors;
-    function manageInvestors(address _address, bool _operation) onlyOwner {
-        if(_operation == true)
-        approvedInvestors[_address] = true;
-        else
-        delete approvedInvestors[_address];
+    struct Whitelist {
+        uint id;
+        uint max;
+        uint total;
+        bool init;
+    }
+    mapping(address => Whitelist) approvedInvestors;
+    function manageInvestors(uint _fiinu_customer_id, address _investors_wallet_address, uint _max_approved_investment) onlyOwner {
+        if(approvedInvestors[_investors_wallet_address].init){
+            approvedInvestors[_investors_wallet_address].max = _max_approved_investment;
+            
+            // clean up
+            if(approvedInvestors[_investors_wallet_address].max == 0 && approvedInvestors[_investors_wallet_address].total == 0)
+                delete approvedInvestors[_investors_wallet_address];
+        }
+        else{
+            approvedInvestors[_investors_wallet_address] = Whitelist(_fiinu_customer_id, _max_approved_investment, 0, true);
+        }
     }
 }
+/*
+Fiinu smart contract for the FNU token sale.
+
+We have defined in the contract 5 stages. They progress linearly in a logical manner, in exception of the last stage, which is conditional and linked to our business milestone - getting the banking license.
+
+preICO -> ICOopen -> ICOclosed -> ICOcompleted -> BankLicenseSuccessful OR BankLicenseFailed
+
+Please find special characteristics of each stage described below.
+
+1. preICO
+This is the starting point of the FNU smart-contract.
+Trading of the FNU is closed.
+We are accepting investments from registered investors, who have passed our AML 
+and KYC requirements - we white-label their addresses, including max investment limit.
+Price of FNU has 33% bonus, 0.75 ETH = 1 FNU (0.75 + 33% = 1).
+Minimum investment amount is 100 ETH.
+Maximum ICO raise gap is 400'000 ETH.
+
+2. ICOopen
+Trading of the FNU is closed.
+We are accepting investments from registered investors, who have passed our AML 
+and KYC requirements - we white-label their addresses, including max investment limit.
+Price of FNU is calculated by formula = max(1, total_raised/100'000)
+ Up to 100'000 ETH raised against price of 1 ETH = 1 FNU, onwards the price will be 
+ calculated dynamically (in general and because of the max rais gap, the price 
+ will start from 1 ETH and will go up to a maximum of 4 ETH per 1 FNU).
+There is no minimum investment requirement.
+Maximum ICO raise gap is 400'000 ETH.
+
+3. ICOclosed
+Trading of the FNU is closed.
+Investing to smart-contract is closed.
+We send out Investment Confirmation Statement as PDF to all investors
+
+4. ICOcompleted
+Trading of the FNU is closed
+Coin allocation for Fiinu staff
+
+5.1 BankLicenseSuccessful
+Trading of the FNU is open
+
+5.2 BankLicenseFailed
+Trading of the FNU is closed
+All investors can claim automatic refund
+*/
 contract FiinuToken is Investors {
     using SafeMath for uint;
     address wallet;
@@ -124,10 +189,11 @@ contract FiinuToken is Investors {
     uint constant targetRaiseWei = 100000 * 10 ** 18;
     uint constant maxRaiseWei = 400000 * 10 ** 18;
     uint public raisedWei = 0;
+    uint public refundWei = 0;
     function FiinuToken(address _wallet) {
-        wallet = _wallet;
+        wallet = _wallet; // multi sig wallet
     }
-    function weiToFNU(uint _wei) internal constant returns (uint){
+    function weiToFNU(uint _wei) public constant returns (uint){
         uint _return;
         // 1 FNU = 0.75 ETH
         if(state == State.preICO){
@@ -147,49 +213,76 @@ contract FiinuToken is Investors {
         return _return / 10 ** 12;
     }
     function () payable {
-        investETH();
+        require(msg.value != 0); // incoming transaction must have value
+        if(state == State.preICO || state == State.ICOopen){ // state is preICO or ICOopen 
+            require(approvedInvestors[msg.sender].init == true); // is approved investor
+            require(approvedInvestors[msg.sender].max <= approvedInvestors[msg.sender].total.add(msg.value)); // investment is not breaching max approved investment amount
+            require(maxRaiseWei >= raisedWei.add(msg.value)); // investment is not breaching max raising limit
+            
+            if(state == State.preICO && msg.value < 100 * 10 ** 18) revert(); // preICO condition, min amount 100 ETH
+    
+            uint weiAmount = msg.value;
+            raisedWei = raisedWei.add(weiAmount);
+            approvedInvestors[msg.sender].total = approvedInvestors[msg.sender].total.add(weiAmount);
+            mint(msg.sender, weiToFNU(weiAmount));
+            
+            // move ETH to multi sig wallet
+            wallet.transfer(msg.value);
+        }
+        else if(state == State.ICOcompleted){ // balance for the refunds
+            refundWei = refundWei.add(msg.value);
+        }
+        else{
+            revert();
+        }
     }
-    function investETH() payable {
-        require(approvedInvestors[msg.sender] == true);
-        require(state == State.preICO || state == State.ICOopen);
-        require(msg.value != 0);
-        require(maxRaiseWei >= raisedWei.add(msg.value));
+    function investFIAT(uint _fiinu_customer_id, address _to, uint _valueFIAT, uint _rateETHtoFIAT) onlyOwner {
+        require(state == State.preICO || state == State.ICOopen || state == State.ICOclosed); // state is preICO, ICOopen or State.ICOclosed
+        require(_valueFIAT != 0); // incoming transaction must have value
 
-        if(state == State.preICO && msg.value < 100 * 10 ** 18) revert();
-
-        uint weiAmount = msg.value;
-        raisedWei = raisedWei.add(weiAmount);
-        mint(msg.sender, weiToFNU(weiAmount));
-
-        TransferETH();
-    }
-    function investFIAT(address _to, uint _valueFIAT, uint _rateETHtoFIAT) onlyOwner {
-        require(state == State.preICO || state == State.ICOopen || state == State.ICOclosed);
-        require(_valueFIAT != 0);
+        if(!approvedInvestors[_to].init) manageInvestors(_fiinu_customer_id, _to, 0); // if not add investor to whitelist
 
         uint weiAmount = _valueFIAT.div(_rateETHtoFIAT) * 10 ** 18;
         raisedWei = raisedWei.add(weiAmount);
+        approvedInvestors[msg.sender].total = approvedInvestors[msg.sender].total.add(weiAmount);
         mint(_to, weiToFNU(weiAmount));
-
-        if(!approvedInvestors[_to]) manageInvestors(_to, true);
     }
-    function CompletedICO(string _announcement) onlyOwner inState(State.ICOclosed){
-        // staff allocation
+    function Milestone_CompletedICO(string _announcement) onlyOwner inState(State.ICOclosed) {
+        // staff allocations
         uint _toBeAllocated = totalSupply.div(10);
-        mint(0x123, _toBeAllocated.div(100).mul(81));
-        mint(0x123, _toBeAllocated.div(100).mul(9));
-        mint(0x123, _toBeAllocated.div(1000).mul(15));
-        mint(0x123, _toBeAllocated.div(1000).mul(15));
-        mint(owner, _toBeAllocated.div(100).mul(7));
-        Milestone(_announcement);
-        state = State.ICOcompleted;
+        mint(0x01, _toBeAllocated.mul(81).div(100)); // 81%
+        mint(0x02, _toBeAllocated.mul(9).div(100)); // 9%
+        mint(0x03, _toBeAllocated.mul(15).div(1000));  // 1.5%
+        mint(0x04, _toBeAllocated.mul(15).div(1000)); // 1.5%
+        mint(owner, _toBeAllocated.mul(7).div(100)); // 7%
+        super.Milestone_CompletedICO(_announcement);
     }
+    function Milestone_BankLicenseFailed(string _announcement) onlyOwner inState(State.ICOcompleted) {
+        // remove staff allocations
+        burn(0x01);
+        burn(0x02);
+        burn(0x03);
+        burn(0x04);
+        burn(owner);
+        super.Milestone_BankLicenseFailed(_announcement);
+    }
+    function RequestRefund() public inState(State.BankLicenseFailed){
+        require(balances[msg.sender] > 0); // you must have some FNU to request refund
+        // refund prorata of your ETH investment
+        uint refundAmount = refundWei.mul(approvedInvestors[msg.sender].total).div(raisedWei);
+        burn(msg.sender);
+        msg.sender.transfer(refundAmount);
+    }
+    // minting possible only if State.preICO, State.ICOopen or State.ICOclosed
     function mint(address _to, uint _tokens) internal {
         totalSupply = totalSupply.add(_tokens);
         balances[_to] = balances[_to].add(_tokens);
         Transfer(0x0, _to, _tokens);
     }
-    function TransferETH() internal {
-        wallet.transfer(msg.value);
+    // burning only if State.ICOcompleted or State.BankLicenseFailed
+    function burn(address _address) internal {
+        totalSupply = totalSupply.sub(balances[_address]);
+        Transfer(_address, 0x0, balances[_address]);
+        delete balances[_address];
     }
 }
