@@ -44,5 +44,5 @@ Trading of the FNU is not allowed and investors can claim an automatic refund.
 Trading of the FNU open.
 Investors, who have passed our AML and KYC requirements - we white-label their addresses, can participate on profit sharings automatically.
 
-## BankLicenseFailed
+### BankLicenseFailed
 Trading of the FNU is not allowed and investors can claim an automatic refund.
