@@ -243,18 +243,6 @@ contract FiinuToken is StandardToken, Investors {
             ProfitShareAvailable(addr, profitShare);
         }
     }
-    function investFIAT(address _address, uint _valueFIAT, uint _rateETHtoFIAT) onlyOwner {
-        require(state == State.preICO || state == State.ICOopen || state == State.ICOclosed);
-        require(_valueFIAT != 0); // incoming transaction must have value
-
-        if(!approvedInvestors[_address].init) manageInvestors(_address, 0); // if not add investor to whitelist
-
-        uint weiAmount = _valueFIAT.div(_rateETHtoFIAT) * 10 ** 18;
-        raisedWei = raisedWei.add(weiAmount);
-        if(approvedInvestors[_address].total == 0) allFNUHolders.addAddress(_address);  // first time
-        approvedInvestors[_address].total = approvedInvestors[_address].total.add(weiAmount);
-        mint(_address, weiToFNU(weiAmount));
-    }
     function Milestone_ICOSuccessful(string _announcement) onlyOwner inState(State.ICOclosed) {
         // staff allocations
         uint _toBeAllocated = totalSupply.div(10);
