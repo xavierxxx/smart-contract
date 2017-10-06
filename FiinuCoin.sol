@@ -172,8 +172,7 @@ contract Investors is Milestones {
         }
     }
     function manageAdmins(address _address, bool _add) onlyOwner {
-        if(_add) admins[_address] = true;
-        else delete admins[_address];
+        admins[_address] = _add;
     }
 }
 contract FiinuToken is StandardToken, Investors {
