@@ -204,7 +204,7 @@ contract FiinuToken is StandardToken, Investors {
             }
             // 1 FNU = raisedWei / targetRaiseWei
             else{
-                _return = _wei.div(raisedWei.div(targetRaiseWei));
+                _return = _wei.mul(targetRaiseWei).div(raisedWei);
             }
         }
         // WEI to FNU
