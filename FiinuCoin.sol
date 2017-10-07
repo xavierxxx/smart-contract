@@ -20,37 +20,6 @@ library SafeMath {
         return c;
     }
 }
-library ArrayUtil {
-    function addAddress(address[] storage _self, address _value) internal returns (uint) {
-        uint c = _self.length;
-        for (uint i = 0; i < c; i++) {
-            if (_self[i] == _value)
-            return i; // exists
-        }
-        _self.length++;
-        _self[c] = _value;
-        return c;
-    }
-    function removeAddress(address[] storage _self, address _value) internal returns (bool) {
-        uint c = _self.length;
-        uint x = 0;
-        bool f = false;
-        for (uint i = 0; i < c; i++) {
-            if (_self[i] == _value) {
-                x = i;
-                f = true;
-                break;
-            }
-        }
-        if (f) {
-            c--;
-            _self[x] = _self[c];
-            delete _self[c];
-            _self.length--;
-        }
-        return f;
-    }
-}
 contract ERC20 {
     uint public totalSupply;
     function balanceOf(address _owner) public constant returns (uint balance);
@@ -173,9 +142,6 @@ contract Investors is Milestones {
     }
     mapping(address => bool) internal admins;
     mapping(address => WhitelistEntry) approvedInvestors;
-    address[] public allFNUHolders;
-    mapping(address => uint) profits;
-    address[] public allProfitHolders;
     modifier onlyAdmins() {
         require(admins[msg.sender] == true);
         _;
@@ -197,7 +163,6 @@ contract Investors is Milestones {
 }
 contract FiinuToken is StandardToken, Investors {
     using SafeMath for uint;
-    using ArrayUtil for address[];
     address wallet;
     string public constant name = "Fiinucoin";
     string public constant symbol = "FNU";
@@ -239,11 +204,12 @@ contract FiinuToken is StandardToken, Investors {
         if(state == State.preICO && msg.value < 100 ether) revert(); // preICO condition, min amount 100 ETH
 
         raisedWei = raisedWei.add(msg.value);
-        if(approvedInvestors[msg.sender].total == 0) allFNUHolders.addAddress(msg.sender);  // first time
         approvedInvestors[msg.sender].total = approvedInvestors[msg.sender].total.add(msg.value); // increase total invested
         uint _fnu = weiToFNU(msg.value);
-
         mint(msg.sender, _fnu); // Mint the tokens
+        /* TODO
+        we need to change wallet.transfer push with pull method to avoid out of gas
+        */
         wallet.transfer(msg.value); // Move ETH to multi sig wallet
         Investment(msg.sender, msg.value, _fnu); // Announce investment
     }
@@ -254,18 +220,13 @@ contract FiinuToken is StandardToken, Investors {
     }
     function shareProfits() payable inState(State.BankLicenseSuccessful) {
         require(msg.value != 0); // incoming transaction must have value
-        uint c = allFNUHolders.length;
-        for (uint i = 0; i < c; i++) {
-            address addr = allFNUHolders[i];
-            uint profitShare = balances[addr].mul(msg.value).div(totalSupply);
-            profits[addr] = profits[addr].add(profitShare);
-            allProfitHolders.addAddress(addr);
-            ProfitShareAvailable(addr, profitShare);
-        }
+        /* TODO
+        We need to share proffits prorata to FNU holders 
+        */
     }
     function Milestone_IcoSuccessful(string _announcement) onlyOwner {
         require(raisedWei >= minRaisedWei);
-        // staff allocations
+        // staff allocations (actial addresses will be added later)
         uint _toBeAllocated = totalSupply.div(10);
         mint(0x01, _toBeAllocated.mul(81).div(100)); // 81%
         mint(0x02, _toBeAllocated.mul(9).div(100)); // 9%
@@ -287,28 +248,11 @@ contract FiinuToken is StandardToken, Investors {
         burn(owner);
         super.Milestone_BankLicenseFailed(_announcement);
     }
-    function PrepareForProfitShare() onlyOwner inState(State.BankLicenseSuccessful) {
-        uint c = allProfitHolders.length;
-        for (uint i = 0; i < c; i++) {
-            if(profits[allProfitHolders[i]] > 0) delete profits[allProfitHolders[i]];
-            delete allProfitHolders[i];
-        }
-        allProfitHolders.length = 0;
-        wallet.transfer(this.balance);
-    }
     function transfer(address _to, uint _value) isTradingOpen returns (bool) {
-        bool _isNew = balances[_to] == 0;
-        bool _return = super.transfer(_to, _value);
-        if (_isNew) allFNUHolders.addAddress(_to);
-        if (balances[msg.sender] == 0) allFNUHolders.removeAddress(msg.sender);
-        return _return;
+        return super.transfer(_to, _value);
     }
     function transferFrom(address _from, address _to, uint _value) isTradingOpen returns (bool) {
-        bool _isNew = balances[_to] == 0;
-        bool _return = super.transferFrom(_from, _to, _value);
-        if (_isNew) allFNUHolders.addAddress(_to);
-        if (balances[_from] == 0) allFNUHolders.removeAddress(_from);
-        return _return;
+        return super.transferFrom(_from, _to, _value);
     }
     // handle automatic refunds
     function RequestRefund() public {
@@ -318,13 +262,6 @@ contract FiinuToken is StandardToken, Investors {
         uint refundAmount = refundWei.mul(approvedInvestors[msg.sender].total).div(raisedWei);
         burn(msg.sender);
         msg.sender.transfer(refundAmount);
-    }
-    // handle automatic profit sharing
-    function RequestProfitShare() public inState(State.BankLicenseSuccessful){
-        require(profits[msg.sender] > 0); // you must have some pending profits
-        require(approvedInvestors[msg.sender].init == true); // is approved investor
-        msg.sender.transfer(profits[msg.sender]);
-        delete profits[msg.sender];
     }
     // minting possible only if State.preICO and State.IcoOpen for () payable or State.IcoClosed for investFIAT()
     function mint(address _to, uint _tokens) internal {
