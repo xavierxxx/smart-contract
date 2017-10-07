@@ -243,6 +243,7 @@ contract FiinuToken is StandardToken, Investors {
         }
     }
     function Milestone_ICOSuccessful(string _announcement) onlyOwner inState(State.ICOclosed) {
+        require(raisedWei >= minRaiseWei);
         // staff allocations
         uint _toBeAllocated = totalSupply.div(10);
         mint(0x01, _toBeAllocated.mul(81).div(100)); // 81%
@@ -251,6 +252,10 @@ contract FiinuToken is StandardToken, Investors {
         mint(0x04, _toBeAllocated.mul(15).div(1000)); // 1.5%
         mint(owner, _toBeAllocated.mul(7).div(100)); // 7%
         super.Milestone_ICOSuccessful(_announcement);
+    }
+    function Milestone_ICOFailed(string _announcement) onlyOwner inState(State.ICOclosed) {
+        require(raisedWei < minRaiseWei);
+        super.Milestone_ICOFailed(_announcement);
     }
     function Milestone_BankLicenseFailed(string _announcement) onlyOwner inState(State.ICOSuccessful) {
         // remove staff allocations
