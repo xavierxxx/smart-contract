@@ -220,11 +220,12 @@ contract FiinuToken is StandardToken, Investors {
 
         raisedWei = raisedWei.add(msg.value);
         if(approvedInvestors[msg.sender].total == 0) allFNUHolders.addAddress(msg.sender);  // first time
-        approvedInvestors[msg.sender].total = approvedInvestors[msg.sender].total.add(msg.value);
-        mint(msg.sender, weiToFNU(msg.value));
-
-        // move ETH to multi sig wallet
-        wallet.transfer(msg.value);
+        approvedInvestors[msg.sender].total = approvedInvestors[msg.sender].total.add(msg.value); // increase total invested
+        uint _fnu = weiToFNU(msg.value);
+        
+        mint(msg.sender, _fnu); // Mint the tokens
+        wallet.transfer(msg.value); // Move ETH to multi sig wallet
+        Investment(msg.sender, msg.value, _fnu); // Announce investment
     }
     function refund() payable {
         require(msg.value != 0); // incoming transaction must have value
@@ -309,13 +310,12 @@ contract FiinuToken is StandardToken, Investors {
     function mint(address _to, uint _tokens) internal {
         totalSupply = totalSupply.add(_tokens);
         balances[_to] = balances[_to].add(_tokens);
-        Transfer(0x0, _to, _tokens);
     }
     // burning only in State.ICOcompleted for Milestone_BankLicenseFailed() or State.BankLicenseFailed for RequestRefund()
     function burn(address _address) internal {
         totalSupply = totalSupply.sub(balances[_address]);
-        Transfer(_address, 0x0, balances[_address]);
         delete balances[_address];
     }
     event ProfitShareAvailable(address addr, uint amount);
+    event Investment(address indexed _investor, uint _valueEth, uint _valueFnu);
 }
