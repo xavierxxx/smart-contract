@@ -76,8 +76,8 @@ contract StandardToken is ERC20 {
     }
     function transferFrom(address _from, address _to, uint _value) returns (bool) {
         var _allowance = allowed[_from][msg.sender];
-        balances[_to] = balances[_to].add(_value);
         balances[_from] = balances[_from].sub(_value);
+        balances[_to] = balances[_to].add(_value);
         allowed[_from][msg.sender] = _allowance.sub(_value);
         Transfer(_from, _to, _value);
         return true;
