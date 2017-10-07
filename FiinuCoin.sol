@@ -136,9 +136,9 @@ contract Milestones is Ownable {
 }
 contract Investors is Milestones {
     struct WhitelistEntry {
-    uint max;
-    uint total;
-    bool init;
+        uint max;
+        uint total;
+        bool init;
     }
     mapping(address => bool) internal admins;
     mapping(address => WhitelistEntry) approvedInvestors;
