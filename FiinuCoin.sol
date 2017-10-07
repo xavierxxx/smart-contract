@@ -323,8 +323,8 @@ contract FiinuToken is StandardToken, Investors {
     function RequestProfitShare() public inState(State.BankLicenseSuccessful){
         require(profits[msg.sender] > 0); // you must have some pending profits
         require(approvedInvestors[msg.sender].init == true); // is approved investor
-        delete profits[msg.sender];
         msg.sender.transfer(profits[msg.sender]);
+        delete profits[msg.sender];
     }
     // minting possible only if State.preICO and State.IcoOpen for () payable or State.IcoClosed for investFIAT()
     function mint(address _to, uint _tokens) internal {
