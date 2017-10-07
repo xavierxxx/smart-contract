@@ -68,7 +68,7 @@ contract StandardToken is ERC20 {
     function transfer(address _to, uint _value) public returns (bool) {
         require(_to != address(0));
         require(_value <= balances[msg.sender]);
-    
+
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
         Transfer(msg.sender, _to, _value);
@@ -81,7 +81,7 @@ contract StandardToken is ERC20 {
         require(_to != address(0));
         require(_value <= balances[_from]);
         require(_value <= allowed[_from][msg.sender]);
-    
+
         balances[_from] = balances[_from].sub(_value);
         balances[_to] = balances[_to].add(_value);
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
@@ -127,7 +127,7 @@ contract Ownable {
     }
 }
 contract Milestones is Ownable {
-    enum State { preICO, ICOopen, ICOclosed, ICOSuccessful, ICOFailed, BankLicenseSuccessful, BankLicenseFailed }
+    enum State { preICO, IcoOpen, IcoClosed, IcoSuccessful, IcoFailed, BankLicenseSuccessful, BankLicenseFailed }
     State internal state = State.preICO;
     bool internal tradingOpen = false;
     modifier inState(State _state) {
@@ -140,39 +140,39 @@ contract Milestones is Ownable {
     }
     function Milestone_OpenTheICO(string _announcement) onlyOwner inState(State.preICO) {
         Milestone(_announcement);
-        state = State.ICOopen;
+        state = State.IcoOpen;
     }
-    function Milestone_CloseTheICO(string _announcement) onlyOwner inState(State.ICOopen) {
+    function Milestone_CloseTheICO(string _announcement) onlyOwner inState(State.IcoOpen) {
         Milestone(_announcement);
-        state = State.ICOclosed;
+        state = State.IcoClosed;
     }
-    function Milestone_ICOSuccessful(string _announcement) onlyOwner inState(State.ICOclosed) {
+    function Milestone_IcoSuccessful(string _announcement) onlyOwner inState(State.IcoClosed) {
         Milestone(_announcement);
-        state = State.ICOSuccessful;
+        state = State.IcoSuccessful;
     }
-    function Milestone_ICOFailed(string _announcement) onlyOwner inState(State.ICOclosed) {
+    function Milestone_IcoFailed(string _announcement) onlyOwner inState(State.IcoClosed) {
         Milestone(_announcement);
-        state = State.ICOFailed;
+        state = State.IcoFailed;
     }
-    function Milestone_BankLicenseSuccessful(string _announcement) onlyOwner inState(State.ICOSuccessful) {
+    function Milestone_BankLicenseSuccessful(string _announcement) onlyOwner inState(State.IcoSuccessful) {
         Milestone(_announcement);
         tradingOpen = true;
         state = State.BankLicenseSuccessful;
     }
-    function Milestone_BankLicenseFailed(string _announcement) onlyOwner inState(State.ICOSuccessful) {
+    function Milestone_BankLicenseFailed(string _announcement) onlyOwner inState(State.IcoSuccessful) {
         Milestone(_announcement);
         state = State.BankLicenseFailed;
     }
     event Milestone(string announcement);
 }
 contract Investors is Milestones {
-    struct Whitelist {
+    struct WhitelistEntry {
         uint max;
         uint total;
         bool init;
     }
     mapping(address => bool) internal admins;
-    mapping(address => Whitelist) approvedInvestors;
+    mapping(address => WhitelistEntry) approvedInvestors;
     address[] public allFNUHolders;
     mapping(address => uint) profits;
     address[] public allProfitHolders;
@@ -188,7 +188,7 @@ contract Investors is Milestones {
             delete approvedInvestors[_investors_wallet_address];
         }
         else{
-            approvedInvestors[_investors_wallet_address] = Whitelist(_max_approved_investment * 10 ** 18, 0, true);
+            approvedInvestors[_investors_wallet_address] = WhitelistEntry(_max_approved_investment * 10 ** 18, 0, true);
         }
     }
     function manageAdmins(address _address, bool _add) onlyOwner {
@@ -202,9 +202,9 @@ contract FiinuToken is StandardToken, Investors {
     string public constant name = "Fiinucoin";
     string public constant symbol = "FNU";
     uint8 public constant decimals = 6;
-    uint constant minRaiseWei = 20000 * 10 ** 18;
-    uint constant targetRaiseWei = 100000 * 10 ** 18;
-    uint constant maxRaiseWei = 400000 * 10 ** 18;
+    uint constant minRaisedWei = 20000 ether;
+    uint constant targetRaisedWei = 100000 ether;
+    uint constant maxRaisedWei = 400000 ether;
     uint public raisedWei = 0;
     uint public refundWei = 0;
     function FiinuToken(address _wallet) {
@@ -218,38 +218,38 @@ contract FiinuToken is StandardToken, Investors {
         }
         else {
             // 1 FNU = 1 ETH
-            if(raisedWei < targetRaiseWei){
+            if(raisedWei < targetRaisedWei){
                 _return = _wei;
             }
-            // 1 FNU = raisedWei / targetRaiseWei
+            // 1 FNU = raisedWei / targetRaisedWei
             else{
-                _return = _wei.mul(targetRaiseWei).div(raisedWei);
+                _return = _wei.mul(targetRaisedWei).div(raisedWei);
             }
         }
         // WEI to FNU
         return _return / 10 ** 12;
     }
-    function () payable { // incoming investment in the state of preICO or ICOopen 
+    function () payable { // incoming investment in the state of preICO or IcoOpen
         require(msg.value != 0); // incoming transaction must have value
-        require(state == State.preICO || state == State.ICOopen);
+        require(state == State.preICO || state == State.IcoOpen);
         require(approvedInvestors[msg.sender].init == true); // is approved investor
         require(approvedInvestors[msg.sender].max >= approvedInvestors[msg.sender].total.add(msg.value)); // investment is not breaching max approved investment amount
-        require(maxRaiseWei >= raisedWei.add(msg.value)); // investment is not breaching max raising limit
+        require(maxRaisedWei >= raisedWei.add(msg.value)); // investment is not breaching max raising limit
 
-        if(state == State.preICO && msg.value < 100 * 10 ** 18) revert(); // preICO condition, min amount 100 ETH
+        if(state == State.preICO && msg.value < 100 ether) revert(); // preICO condition, min amount 100 ETH
 
         raisedWei = raisedWei.add(msg.value);
         if(approvedInvestors[msg.sender].total == 0) allFNUHolders.addAddress(msg.sender);  // first time
         approvedInvestors[msg.sender].total = approvedInvestors[msg.sender].total.add(msg.value); // increase total invested
         uint _fnu = weiToFNU(msg.value);
-        
+
         mint(msg.sender, _fnu); // Mint the tokens
         wallet.transfer(msg.value); // Move ETH to multi sig wallet
         Investment(msg.sender, msg.value, _fnu); // Announce investment
     }
     function refund() payable {
         require(msg.value != 0); // incoming transaction must have value
-        require(state == State.ICOclosed || state == State.ICOSuccessful);
+        require(state == State.IcoClosed || state == State.IcoSuccessful);
         refundWei = refundWei.add(msg.value);
     }
     function shareProfits() payable inState(State.BankLicenseSuccessful) {
@@ -263,8 +263,8 @@ contract FiinuToken is StandardToken, Investors {
             ProfitShareAvailable(addr, profitShare);
         }
     }
-    function Milestone_ICOSuccessful(string _announcement) onlyOwner inState(State.ICOclosed) {
-        require(raisedWei >= minRaiseWei);
+    function Milestone_IcoSuccessful(string _announcement) onlyOwner {
+        require(raisedWei >= minRaisedWei);
         // staff allocations
         uint _toBeAllocated = totalSupply.div(10);
         mint(0x01, _toBeAllocated.mul(81).div(100)); // 81%
@@ -272,13 +272,13 @@ contract FiinuToken is StandardToken, Investors {
         mint(0x03, _toBeAllocated.mul(15).div(1000));  // 1.5%
         mint(0x04, _toBeAllocated.mul(15).div(1000)); // 1.5%
         mint(owner, _toBeAllocated.mul(7).div(100)); // 7%
-        super.Milestone_ICOSuccessful(_announcement);
+        super.Milestone_IcoSuccessful(_announcement);
     }
-    function Milestone_ICOFailed(string _announcement) onlyOwner inState(State.ICOclosed) {
-        require(raisedWei < minRaiseWei);
-        super.Milestone_ICOFailed(_announcement);
+    function Milestone_IcoFailed(string _announcement) onlyOwner {
+        require(raisedWei < minRaisedWei);
+        super.Milestone_IcoFailed(_announcement);
     }
-    function Milestone_BankLicenseFailed(string _announcement) onlyOwner inState(State.ICOSuccessful) {
+    function Milestone_BankLicenseFailed(string _announcement) onlyOwner {
         // remove staff allocations
         burn(0x01);
         burn(0x02);
@@ -298,21 +298,21 @@ contract FiinuToken is StandardToken, Investors {
     }
     function transfer(address _to, uint _value) isTradingOpen returns (bool) {
         bool _isNew = balances[_to] == 0;
-        super.transfer(_to, _value);
+        bool _return = super.transfer(_to, _value);
         if (_isNew) allFNUHolders.addAddress(_to);
         if (balances[msg.sender] == 0) allFNUHolders.removeAddress(msg.sender);
-        return true;
+        return _return;
     }
     function transferFrom(address _from, address _to, uint _value) isTradingOpen returns (bool) {
         bool _isNew = balances[_to] == 0;
-        super.transferFrom(_from, _to, _value);
+        bool _return = super.transferFrom(_from, _to, _value);
         if (_isNew) allFNUHolders.addAddress(_to);
         if (balances[_from] == 0) allFNUHolders.removeAddress(_from);
-        return true;
+        return _return;
     }
     // handle automatic refunds
     function RequestRefund() public {
-        require(state == State.ICOFailed || state == State.BankLicenseFailed);
+        require(state == State.IcoFailed || state == State.BankLicenseFailed);
         require(balances[msg.sender] > 0); // you must have some FNU to request refund
         // refund prorata against your ETH investment
         uint refundAmount = refundWei.mul(approvedInvestors[msg.sender].total).div(raisedWei);
@@ -326,7 +326,7 @@ contract FiinuToken is StandardToken, Investors {
         msg.sender.transfer(profits[msg.sender]);
         delete profits[msg.sender];
     }
-    // minting possible only if State.preICO and State.ICOopen for () payable or State.ICOclosed for investFIAT()
+    // minting possible only if State.preICO and State.IcoOpen for () payable or State.IcoClosed for investFIAT()
     function mint(address _to, uint _tokens) internal {
         totalSupply = totalSupply.add(_tokens);
         balances[_to] = balances[_to].add(_tokens);
