@@ -1,100 +1,9 @@
 pragma solidity ^0.4.15;
 
-library SafeMath {
-    function mul(uint a, uint b) internal constant returns (uint) {
-        uint c = a * b;
-        assert(a == 0 || c / a == b);
-        return c;
-    }
-    function div(uint a, uint b) internal constant returns (uint) {
-        uint c = a / b;
-        return c;
-    }
-    function sub(uint a, uint b) internal constant returns (uint) {
-        assert(b <= a);
-        return a - b;
-    }
-    function add(uint a, uint b) internal constant returns (uint) {
-        uint c = a + b;
-        assert(c >= a);
-        return c;
-    }
-}
-contract ERC20 {
-    uint public totalSupply;
-    function balanceOf(address _owner) public constant returns (uint balance);
-    function transfer(address _to, uint _value) public returns (bool success);
-    function transferFrom(address _from, address _to, uint _value) public returns (bool success);
-    function approve(address _spender, uint _value) public returns (bool success);
-    function allowance(address _owner, address _spender) public constant returns (uint remaining);
-    event Transfer(address indexed _from, address indexed _to, uint _value);
-    event Approval(address indexed _owner, address indexed _spender, uint _value);
-}
-contract StandardToken is ERC20 {
-    using SafeMath for uint;
-    mapping(address => uint) balances;
-    mapping(address => mapping (address => uint)) internal allowed;
-    function transfer(address _to, uint _value) public returns (bool) {
-        require(_to != address(0));
-        require(_value <= balances[msg.sender]);
+import "./MiniMeToken.sol";
+import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-        Transfer(msg.sender, _to, _value);
-        return true;
-    }
-    function balanceOf(address _owner) public constant returns (uint balance) {
-        return balances[_owner];
-    }
-    function transferFrom(address _from, address _to, uint _value) public returns (bool) {
-        require(_to != address(0));
-        require(_value <= balances[_from]);
-        require(_value <= allowed[_from][msg.sender]);
-
-        balances[_from] = balances[_from].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-        allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-        Transfer(_from, _to, _value);
-        return true;
-    }
-    function approve(address _spender, uint _value) public returns (bool) {
-        allowed[msg.sender][_spender] = _value;
-        Approval(msg.sender, _spender, _value);
-        return true;
-    }
-    function allowance(address _owner, address _spender) public constant returns (uint remaining) {
-        return allowed[_owner][_spender];
-    }
-    function increaseApproval (address _spender, uint _addedValue) public returns (bool success) {
-        allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_addedValue);
-        Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
-        return true;
-    }
-    function decreaseApproval (address _spender, uint _subtractedValue) public returns (bool success) {
-        uint oldValue = allowed[msg.sender][_spender];
-        if (_subtractedValue > oldValue) {
-            allowed[msg.sender][_spender] = 0;
-        } else {
-            allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
-        }
-        Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
-        return true;
-    }
-}
-contract Ownable {
-    address public owner;
-    function Ownable() {
-        owner = msg.sender;
-    }
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-    function transferOwnership(address newOwner) onlyOwner {
-        require(newOwner != address(0));
-        owner = newOwner;
-    }
-}
 contract Milestones is Ownable {
     enum State { PreIco, IcoOpen, IcoClosed, IcoSuccessful, IcoFailed, BankLicenseSuccessful, BankLicenseFailed }
     State internal state = State.PreIco;
@@ -161,20 +70,59 @@ contract Investors is Milestones {
         admins[_address] = _add;
     }
 }
-contract FiinuToken is StandardToken, Investors {
+contract FiinuCrowdSale is TokenController, Investors {
     using SafeMath for uint;
     address wallet;
-    string public constant name = "Fiinucoin";
+    /*string public constant name = "Fiinucoin";
     string public constant symbol = "FNU";
-    uint8 public constant decimals = 6;
+    uint8 public constant decimals = 6;*/
     uint constant minRaisedWei = 20000 ether;
     uint constant targetRaisedWei = 100000 ether;
     uint constant maxRaisedWei = 400000 ether;
     uint public raisedWei = 0;
     uint public refundWei = 0;
-    function FiinuToken(address _wallet) {
+
+    MiniMeToken public tokenContract;   // The new token for this Campaign
+
+    function FiinuCrowdSale(address _wallet, address _tokenAddress) {
         wallet = _wallet; // multi sig wallet
+        tokenContract = MiniMeToken(_tokenAddress);// The Deployed Token Contract
     }
+
+    /////////////////
+    // TokenController interface
+    /////////////////
+
+    /// @notice `proxyPayment()` returns false, meaning ether is not accepted at
+    ///  the token address, only the address of FiinuCrowdSale
+    /// @param _owner The address that will hold the newly created tokens
+
+    function proxyPayment(address _owner) payable returns(bool) {
+        return false;
+    }
+
+    /// @notice Notifies the controller about a transfer, for this Campaign all
+    ///  transfers are allowed by default and no extra notifications are needed
+    /// @param _from The origin of the transfer
+    /// @param _to The destination of the transfer
+    /// @param _amount The amount of the transfer
+    /// @return False if the controller does not authorize the transfer
+    function onTransfer(address _from, address _to, uint _amount) isTradingOpen returns(bool) {
+        return true;
+    }
+
+    /// @notice Notifies the controller about an approval, for this Campaign all
+    ///  approvals are allowed by default and no extra notifications are needed
+    /// @param _owner The address that calls `approve()`
+    /// @param _spender The spender in the `approve()` call
+    /// @param _amount The amount in the `approve()` call
+    /// @return False if the controller does not authorize the approval
+    function onApprove(address _owner, address _spender, uint _amount)
+        returns(bool)
+    {
+        return true;
+    }
+
     function weiToFNU(uint _wei) public constant returns (uint){
         uint _return;
         // 1 FNU = 0.75 ETH
@@ -194,6 +142,7 @@ contract FiinuToken is StandardToken, Investors {
         // WEI to FNU
         return _return / 10 ** 12;
     }
+
     function () payable { // incoming investment in the state of PreIco or IcoOpen
         require(msg.value != 0); // incoming transaction must have value
         require(state == State.PreIco || state == State.IcoOpen);
@@ -218,16 +167,12 @@ contract FiinuToken is StandardToken, Investors {
         require(state == State.IcoClosed || state == State.IcoSuccessful);
         refundWei = refundWei.add(msg.value);
     }
-    function shareProfits() payable inState(State.BankLicenseSuccessful) {
-        require(msg.value != 0); // incoming transaction must have value
-        /* TODO
-        We need to share proffits prorata to FNU holders 
-        */
-    }
+
     function Milestone_IcoSuccessful(string _announcement) onlyOwner {
         require(raisedWei >= minRaisedWei);
         // staff allocations (actial addresses will be added later)
-        uint _toBeAllocated = totalSupply.div(10);
+        uint _toBeAllocated = tokenContract.totalSupply();
+        _toBeAllocated = _toBeAllocated.div(10);
         mint(0x01, _toBeAllocated.mul(81).div(100)); // 81%
         mint(0x02, _toBeAllocated.mul(9).div(100)); // 9%
         mint(0x03, _toBeAllocated.mul(15).div(1000));  // 1.5%
@@ -248,16 +193,10 @@ contract FiinuToken is StandardToken, Investors {
         burn(owner);
         super.Milestone_BankLicenseFailed(_announcement);
     }
-    function transfer(address _to, uint _value) isTradingOpen returns (bool) {
-        return super.transfer(_to, _value);
-    }
-    function transferFrom(address _from, address _to, uint _value) isTradingOpen returns (bool) {
-        return super.transferFrom(_from, _to, _value);
-    }
     // handle automatic refunds
     function RequestRefund() public {
         require(state == State.IcoFailed || state == State.BankLicenseFailed);
-        require(balances[msg.sender] > 0); // you must have some FNU to request refund
+        require(tokenContract.balanceOf(msg.sender) > 0); // you must have some FNU to request refund
         // refund prorata against your ETH investment
         uint refundAmount = refundWei.mul(approvedInvestors[msg.sender].total).div(raisedWei);
         burn(msg.sender);
@@ -265,13 +204,11 @@ contract FiinuToken is StandardToken, Investors {
     }
     // minting possible only if State.PreIco and State.IcoOpen for () payable or State.IcoClosed for investFIAT()
     function mint(address _to, uint _tokens) internal {
-        totalSupply = totalSupply.add(_tokens);
-        balances[_to] = balances[_to].add(_tokens);
+        tokenContract.generateTokens(_to, _tokens);
     }
     // burning only in State.ICOcompleted for Milestone_BankLicenseFailed() or State.BankLicenseFailed for RequestRefund()
     function burn(address _address) internal {
-        totalSupply = totalSupply.sub(balances[_address]);
-        delete balances[_address];
+        tokenContract.destroyTokens(_address, tokenContract.balanceOf(_address));
     }
     event ProfitShareAvailable(address addr, uint amount);
     event Investment(address indexed _investor, uint _valueEth, uint _valueFnu);
