@@ -5,77 +5,103 @@ import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract Milestones is Ownable {
+
     enum State { PreIco, IcoOpen, IcoClosed, IcoSuccessful, IcoFailed, BankLicenseSuccessful, BankLicenseFailed }
-    State internal state = State.PreIco;
-    bool internal tradingOpen = false;
+
+    event Milestone(string _announcement, State _state);
+
+    State public state = State.PreIco;
+    bool public tradingOpen = false;
+
     modifier inState(State _state) {
         require(state == _state);
         _;
     }
+
     modifier isTradingOpen() {
         require(tradingOpen);
         _;
     }
+
     function Milestone_OpenTheIco(string _announcement) onlyOwner inState(State.PreIco) {
-        Milestone(_announcement);
         state = State.IcoOpen;
+        Milestone(_announcement, state);
     }
+
     function Milestone_CloseTheIco(string _announcement) onlyOwner inState(State.IcoOpen) {
-        Milestone(_announcement);
         state = State.IcoClosed;
+        Milestone(_announcement, state);
     }
+
     function Milestone_IcoSuccessful(string _announcement) onlyOwner inState(State.IcoClosed) {
-        Milestone(_announcement);
         state = State.IcoSuccessful;
+        Milestone(_announcement, state);
     }
+
     function Milestone_IcoFailed(string _announcement) onlyOwner inState(State.IcoClosed) {
-        Milestone(_announcement);
         state = State.IcoFailed;
+        Milestone(_announcement, state);
     }
+
     function Milestone_BankLicenseSuccessful(string _announcement) onlyOwner inState(State.IcoSuccessful) {
-        Milestone(_announcement);
         tradingOpen = true;
         state = State.BankLicenseSuccessful;
+        Milestone(_announcement, state);
     }
+
     function Milestone_BankLicenseFailed(string _announcement) onlyOwner inState(State.IcoSuccessful) {
-        Milestone(_announcement);
         state = State.BankLicenseFailed;
+        Milestone(_announcement, state);
     }
-    event Milestone(string announcement);
+
 }
+
 contract Investors is Milestones {
+
     struct WhitelistEntry {
         uint max;
         uint total;
         bool init;
     }
+
     mapping(address => bool) internal admins;
     mapping(address => WhitelistEntry) approvedInvestors;
+
     modifier onlyAdmins() {
         require(admins[msg.sender] == true);
         _;
     }
+
     function manageInvestors(address _investors_wallet_address, uint _max_approved_investment) onlyAdmins {
         if(approvedInvestors[_investors_wallet_address].init){
-            approvedInvestors[_investors_wallet_address].max = _max_approved_investment * 10 ** 18; // ETH to WEI
+            approvedInvestors[_investors_wallet_address].max = SafeMath.mul(_max_approved_investment, 10 ** 18); // ETH to WEI
             // clean up
             if(approvedInvestors[_investors_wallet_address].max == 0 && approvedInvestors[_investors_wallet_address].total == 0)
             delete approvedInvestors[_investors_wallet_address];
         }
         else{
-            approvedInvestors[_investors_wallet_address] = WhitelistEntry(_max_approved_investment * 10 ** 18, 0, true);
+            approvedInvestors[_investors_wallet_address] = WhitelistEntry(SafeMath.mul(_max_approved_investment, 10 ** 18), 0, true);
         }
     }
+
     function manageAdmins(address _address, bool _add) onlyOwner {
         admins[_address] = _add;
     }
+
 }
+
 contract FiinuCrowdSale is TokenController, Investors {
     using SafeMath for uint;
+
+    event Investment(address indexed _investor, uint _valueEth, uint _valueFnu);
+    event RefundAdded(address indexed _refunder, uint _valueEth);
+
     address wallet;
-    /*string public constant name = "Fiinucoin";
-    string public constant symbol = "FNU";
-    uint8 public constant decimals = 6;*/
+    address public staff_1 = 0x01;
+    address public staff_2 = 0x02;
+    address public staff_3 = 0x03;
+    address public staff_4 = 0x04;
+
     uint constant minRaisedWei = 20000 ether;
     uint constant targetRaisedWei = 100000 ether;
     uint constant maxRaisedWei = 400000 ether;
@@ -133,17 +159,17 @@ contract FiinuCrowdSale is TokenController, Investors {
             // 1 FNU = 1 ETH
             if(raisedWei < targetRaisedWei){
                 _return = _wei;
-            }
-            // 1 FNU = raisedWei / targetRaisedWei
-            else{
+            } else {
+                // 1 FNU = raisedWei / targetRaisedWei
                 _return = _wei.mul(targetRaisedWei).div(raisedWei);
             }
         }
         // WEI to FNU
-        return _return / 10 ** 12;
+        return _return.div(10 ** 12);
     }
 
     function () payable { // incoming investment in the state of PreIco or IcoOpen
+
         require(msg.value != 0); // incoming transaction must have value
         require(state == State.PreIco || state == State.IcoOpen);
         require(approvedInvestors[msg.sender].init == true); // is approved investor
@@ -162,10 +188,12 @@ contract FiinuCrowdSale is TokenController, Investors {
         wallet.transfer(msg.value); // Move ETH to multi sig wallet
         Investment(msg.sender, msg.value, _fnu); // Announce investment
     }
+
     function refund() payable {
         require(msg.value != 0); // incoming transaction must have value
         require(state == State.IcoClosed || state == State.IcoSuccessful);
         refundWei = refundWei.add(msg.value);
+        RefundAdded(msg.sender, msg.value);
     }
 
     function Milestone_IcoSuccessful(string _announcement) onlyOwner {
@@ -173,23 +201,24 @@ contract FiinuCrowdSale is TokenController, Investors {
         // staff allocations (actial addresses will be added later)
         uint _toBeAllocated = tokenContract.totalSupply();
         _toBeAllocated = _toBeAllocated.div(10);
-        mint(0x01, _toBeAllocated.mul(81).div(100)); // 81%
-        mint(0x02, _toBeAllocated.mul(9).div(100)); // 9%
-        mint(0x03, _toBeAllocated.mul(15).div(1000));  // 1.5%
-        mint(0x04, _toBeAllocated.mul(15).div(1000)); // 1.5%
+        mint(staff_1, _toBeAllocated.mul(81).div(100)); // 81%
+        mint(staff_2, _toBeAllocated.mul(9).div(100)); // 9%
+        mint(staff_3, _toBeAllocated.mul(15).div(1000));  // 1.5%
+        mint(staff_4, _toBeAllocated.mul(15).div(1000)); // 1.5%
         mint(owner, _toBeAllocated.mul(7).div(100)); // 7%
         super.Milestone_IcoSuccessful(_announcement);
     }
+
     function Milestone_IcoFailed(string _announcement) onlyOwner {
         require(raisedWei < minRaisedWei);
         super.Milestone_IcoFailed(_announcement);
     }
     function Milestone_BankLicenseFailed(string _announcement) onlyOwner {
         // remove staff allocations
-        burn(0x01);
-        burn(0x02);
-        burn(0x03);
-        burn(0x04);
+        burn(staff_1);
+        burn(staff_2);
+        burn(staff_3);
+        burn(staff_4);
         burn(owner);
         super.Milestone_BankLicenseFailed(_announcement);
     }
@@ -210,6 +239,4 @@ contract FiinuCrowdSale is TokenController, Investors {
     function burn(address _address) internal {
         tokenContract.destroyTokens(_address, tokenContract.balanceOf(_address));
     }
-    event ProfitShareAvailable(address addr, uint amount);
-    event Investment(address indexed _investor, uint _valueEth, uint _valueFnu);
 }

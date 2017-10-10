@@ -22,7 +22,7 @@ contract FiinuToken is MiniMeToken, Ownable {
         "Fiinu Token",           // Token name
         6,                       // Decimals
         "FNU",                   // Symbol
-        false                    // Enable transfers
+        true                    // Enable transfers
       )
     {}
 
@@ -43,18 +43,5 @@ contract FiinuToken is MiniMeToken, Ownable {
       assert(tokenBurner.burn(msg.sender, _amount));
       Transfer(msg.sender, 0, _amount);
     }
-
-    function destroyTokens(address _owner, uint _amount
-    ) onlyController returns (bool) {
-        uint curTotalSupply = totalSupply();
-        require(curTotalSupply >= _amount);
-        uint previousBalanceFrom = balanceOf(_owner);
-        require(previousBalanceFrom >= _amount);
-        updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
-        updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
-        Transfer(_owner, 0, _amount);
-        return true;
-    }
-
 
 }

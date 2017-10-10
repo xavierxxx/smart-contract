@@ -65,6 +65,39 @@ https://github.com/ethereumjs/testrpc
 1. Run testrpc:  
 `testrpc`  
 
+## Testing
+
+There are comprehensive test cases using the Truffle framework.
+
+Execute `truffle test` (compile warnings are expected):
+```
+Contract: Check Initialisation
+  ✓ 0. check initialized token and crowdsale (151ms)
+
+Contract: Check Investor Intialisation
+  ✓ 0. initialises two admin addresses (72ms)
+  ✓ 1. adds two investors (109ms)
+
+Contract: Check PreSale and Sale
+  ✓ 0. investor purchases during presale (499ms)
+  ✓ 1. checks can't transfer during presale
+  ✓ 2. investor purchases during sale (388ms)
+  ✓ 3. checks can't transfer during sale
+  ✓ 4. checks token allocations after targetRaisedWei is met (134ms)
+
+Contract: Check Staff Allocations and Refund
+  ✓ 0. investor make purchases (742ms)
+  ✓ 1. ICO successful, staff get tokens (618ms)
+  ✓ 2. Bank license failure, staff lose tokens, investers get refunds (2002ms)
+
+Contract: Check Profit Sharing
+  ✓ 0. investor make purchases, bank license issued (1243ms)
+  ✓ 1. Dividend paid and shared between token holders (1652ms)
+
+
+13 passing (8s)
+```
+
 ## Deployment
 
 1. Execute `truffle compile` (warnings are expected):  
