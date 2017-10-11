@@ -92,6 +92,9 @@ it("2. Bank license failure, staff lose tokens, investers get refunds", async ()
     await fiinuCrowdSale.refund({from: admin_1, value: (100320 / 2) * ONEETHER});
 
     await fiinuCrowdSale.Milestone_BankLicenseFailed("Bank License Failed");
+  
+    // we need to open refunding
+    await fiinuCrowdSale.EnableRefund();
 
     //All investors ask for refunds
     var investor_1_start_ether = await web3.eth.getBalance(investor_1);
