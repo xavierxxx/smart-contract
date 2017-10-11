@@ -109,6 +109,8 @@ contract FiinuCrowdSale is TokenController, Investors {
     uint public raisedWei = 0;
     uint public refundWei = 0;
 
+    bool public refundOpen = false;
+    
     MiniMeToken public tokenContract;   // The new token for this Campaign
 
     function FiinuCrowdSale(address _wallet, address _tokenAddress) {
