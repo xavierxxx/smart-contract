@@ -95,6 +95,7 @@ contract FiinuCrowdSale is TokenController, Investors {
 
     event Investment(address indexed _investor, uint _valueEth, uint _valueFnu);
     event RefundAdded(address indexed _refunder, uint _valueEth);
+    event RefundEnabled(uint _valueEth);
 
     address wallet;
     address public staff_1 = 0x01;
@@ -188,7 +189,7 @@ contract FiinuCrowdSale is TokenController, Investors {
 
     function refund() payable {
         require(msg.value != 0); // incoming transaction must have value
-        require(state == State.IcoClosed || state == State.IcoSuccessful);
+        require(state == State.IcoClosed || state == State.IcoSuccessful || state == State.IcoFailed || state == State.BankLicenseFailed);
         refundWei = refundWei.add(msg.value);
         RefundAdded(msg.sender, msg.value);
     }
@@ -210,6 +211,7 @@ contract FiinuCrowdSale is TokenController, Investors {
         require(raisedWei < minRaisedWei);
         super.Milestone_IcoFailed(_announcement);
     }
+    
     function Milestone_BankLicenseFailed(string _announcement) onlyOwner {
         // remove staff allocations
         burn(staff_1);
@@ -219,8 +221,17 @@ contract FiinuCrowdSale is TokenController, Investors {
         burn(owner);
         super.Milestone_BankLicenseFailed(_announcement);
     }
+    
+    function EnableRefund() onlyOwner {
+        require(state == State.IcoFailed || state == State.BankLicenseFailed);
+        require(refundWei > 0);
+        refundOpen = true;
+        RefundEnabled(refundWei);
+    }
+    
     // handle automatic refunds
     function RequestRefund() public {
+        require(refundOpen);
         require(state == State.IcoFailed || state == State.BankLicenseFailed);
         require(tokenContract.balanceOf(msg.sender) > 0); // you must have some FNU to request refund
         // refund prorata against your ETH investment
@@ -228,10 +239,12 @@ contract FiinuCrowdSale is TokenController, Investors {
         burn(msg.sender);
         msg.sender.transfer(refundAmount);
     }
+    
     // minting possible only if State.PreIco and State.IcoOpen for () payable or State.IcoClosed for investFIAT()
     function mint(address _to, uint _tokens) internal {
         tokenContract.generateTokens(_to, _tokens);
     }
+    
     // burning only in State.ICOcompleted for Milestone_BankLicenseFailed() or State.BankLicenseFailed for RequestRefund()
     function burn(address _address) internal {
         tokenContract.destroyTokens(_address, tokenContract.balanceOf(_address));
