@@ -63,7 +63,7 @@ https://github.com/ethereumjs/testrpc
 1. Run `npm install -g ethereumjs-testrpc`.
 
 1. Run testrpc:  
-`testrpc`  
+`testrpc --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e1c, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e11, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e12, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e13, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e14, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e15, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e16, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e17, 1000000000000000000000000"`
 
 ## Testing
 
@@ -72,30 +72,31 @@ There are comprehensive test cases using the Truffle framework.
 Execute `truffle test` (compile warnings are expected):
 ```
 Contract: Check Initialisation
-  ✓ 0. check initialized token and crowdsale (151ms)
-
-Contract: Check Investor Intialisation
-  ✓ 0. initialises two admin addresses (72ms)
-  ✓ 1. adds two investors (109ms)
+  ✓ 0. check initialized token and crowdsale (150ms)
 
 Contract: Check PreSale and Sale
-  ✓ 0. investor purchases during presale (499ms)
+  ✓ 0. investor purchases during presale (552ms)
   ✓ 1. checks can't transfer during presale
-  ✓ 2. investor purchases during sale (388ms)
+  ✓ 2. investor purchases during sale (375ms)
   ✓ 3. checks can't transfer during sale
-  ✓ 4. checks token allocations after targetRaisedWei is met (134ms)
+  ✓ 4. checks token allocations after targetRaisedWei is met (132ms)
+
+Contract: Check Investor Intialisation
+  ✓ 0. initialises two admin addresses (56ms)
+  ✓ 1. adds two investors (52ms)
 
 Contract: Check Staff Allocations and Refund
-  ✓ 0. investor make purchases (742ms)
-  ✓ 1. ICO successful, staff get tokens (618ms)
-  ✓ 2. Bank license failure, staff lose tokens, investers get refunds (2002ms)
+  ✓ 0. investor make purchases (705ms)
+  ✓ 1. ICO successful, staff get tokens (597ms)
+  ✓ 2. Bank license failure, staff lose tokens, investers get refunds (2095ms)
 
-Contract: Check Profit Sharing
-  ✓ 0. investor make purchases, bank license issued (1243ms)
-  ✓ 1. Dividend paid and shared between token holders (1652ms)
+Contract: Check Token Transfers And Profit Sharing
+  ✓ 0. investor make purchases, bank license issued (1269ms)
+  ✓ 1. check tokens can be transferred (48ms)
+  ✓ 2. Dividend paid and shared between token holders (1691ms)
 
 
-13 passing (8s)
+14 passing (8s)
 ```
 
 ## Deployment

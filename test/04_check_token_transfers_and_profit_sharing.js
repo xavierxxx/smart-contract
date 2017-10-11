@@ -7,7 +7,7 @@ const MiniMeTokenFactory = artifacts.require("MiniMeTokenFactory");
 
 const assertFail = require("./helpers/assertFail");
 
-contract('Check Profit Sharing', function (accounts) {
+contract('Check Token Transfers And Profit Sharing', function (accounts) {
 
   //NB - there are comprehensive unit tests for this contract found in:
   //https://github.com/adamdossa/ProfitSharingContract
@@ -71,7 +71,16 @@ contract('Check Profit Sharing', function (accounts) {
 
 });
 
-it("1. Dividend paid and shared between token holders", async () => {
+it("1. check tokens can be transferred", async () => {
+
+  var fiinuCrowdSale = await FiinuCrowdSale.deployed();
+  var fiinuToken = await FiinuToken.deployed();
+
+  await fiinuToken.transfer(investor_2, 50000000, {from: investor_1});
+
+});
+
+it("2. Dividend paid and shared between token holders", async () => {
 
     var fiinuCrowdSale = await FiinuCrowdSale.deployed();
     var fiinuToken = await FiinuToken.deployed();

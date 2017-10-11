@@ -66,9 +66,8 @@ contract('Check PreSale and Sale', function (accounts) {
   it("1. checks can't transfer during presale", async () => {
     var fiinuCrowdSale = await FiinuCrowdSale.deployed();
     var fiinuToken = await FiinuToken.deployed();
-
     await assertFail(async () => {
-      fiinuToken.transfer(invester_2, 100000000, {from: invester_1});
+      await fiinuToken.transfer(investor_2, 100000000, {from: investor_1});
     });
   });
 
@@ -105,7 +104,7 @@ contract('Check PreSale and Sale', function (accounts) {
     var fiinuToken = await FiinuToken.deployed();
 
     await assertFail(async () => {
-      fiinuToken.transfer(invester_2, 100000000, {from: invester_1});
+      await fiinuToken.transfer(investor_2, 100000000, {from: investor_1});
     });
   });
 
