@@ -43,6 +43,7 @@ contract('Check Token Transfers And Profit Sharing', function (accounts) {
     await fiinuCrowdSale.sendTransaction({from: investor_1, value: 10 * ONEETHER});
     await fiinuCrowdSale.sendTransaction({from: investor_2, value: 10 * ONEETHER});
     await fiinuCrowdSale.sendTransaction({from: investor_4, value: 100000 * ONEETHER});
+    await fiinuCrowdSale.sendTransaction({from: investor_4, value: 100000 * ONEETHER});
 
     await fiinuCrowdSale.Milestone_CloseTheIco("Closing Sale");
     await fiinuCrowdSale.Milestone_IcoSuccessful("ICO Successful");
@@ -60,12 +61,12 @@ contract('Check Token Transfers And Profit Sharing', function (accounts) {
     assert.equal(investor_1_balance.toNumber(), 133333333 + 10000000, "Investor 1 should have 143.333333 tokens");
     assert.equal(investor_2_balance.toNumber(), 10000000, "Investor 2 should have 10 tokens");
     assert.equal(investor_3_balance.toNumber(), 266666666, "Investor 3 should still have 266.666666 tokens");
-    assert.equal(investor_4_balance.toNumber(), 99681020733, "Investor 4 should have 99681.020733 tokens");
-    assert.equal(staff_1_balance.toNumber(), 8108182679, "Staff 1 should have 8108.182679 tokens");
-    assert.equal(staff_2_balance.toNumber(), 900909186, "Staff 2 should have 900.909186 tokens");
-    assert.equal(staff_3_balance.toNumber(), 150151531, "Staff 3 should still have 150.1515310 tokens");
-    assert.equal(staff_4_balance.toNumber(), 150151531, "Staff 4 should have 150.1515310 tokens");
-    assert.equal(owner_balance.toNumber(), 700707145, "Owner should have 7007.071450 tokens");
+    assert.equal(investor_4_balance.toNumber(), 100000000000 + 99681020733, "Investor 4 should have 199681.020733 tokens");
+    assert.equal(staff_1_balance.toNumber(), 16208182679, "Staff 1 should have 16208.182679 tokens");
+    assert.equal(staff_2_balance.toNumber(), 1800909186, "Staff 2 should have 1800.909186 tokens");
+    assert.equal(staff_3_balance.toNumber(), 300151531, "Staff 3 should still have 300.151531 tokens");
+    assert.equal(staff_4_balance.toNumber(), 300151531, "Staff 4 should have 300.151531 tokens");
+    assert.equal(owner_balance.toNumber(), 1400707145, "Owner should have 1400.707145 tokens");
 
     await fiinuCrowdSale.Milestone_BankLicenseSuccessful("Bank License Issued");
 
