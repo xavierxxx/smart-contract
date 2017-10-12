@@ -179,8 +179,6 @@ contract FiinuCrowdSale is TokenController, Investors {
         require(approvedInvestors[msg.sender].max >= approvedInvestors[msg.sender].total.add(msg.value)); // investment is not breaching max approved investment amount
         require(maxRaisedWei >= raisedWei.add(msg.value)); // investment is not breaching max raising limit
 
-        if(state == State.PreIco && msg.value < 100 ether) revert(); // PreIco condition, min amount 100 ETH
-
         raisedWei = raisedWei.add(msg.value);
         approvedInvestors[msg.sender].total = approvedInvestors[msg.sender].total.add(msg.value); // increase total invested
         uint _fnu = weiToFNU(msg.value);
