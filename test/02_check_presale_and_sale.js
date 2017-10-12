@@ -108,20 +108,35 @@ contract('Check PreSale and Sale', function (accounts) {
     });
   });
 
-  it("4. checks token allocations after targetRaisedWei is met", async () => {
+  it("4. checks token allocations on targetRaisedWei reach transaction", async () => {
     var fiinuCrowdSale = await FiinuCrowdSale.deployed();
     var fiinuToken = await FiinuToken.deployed();
 
     //Purchase an amount which sends us over targetRaisedWei
+    //raisedWei is 100 + 200 + 10 + 10 = 320
+    //invested amount is 100000
+    //targetRaisedWei is 100000
     //raisedWei will be 100000 + 100 + 200 + 10 + 10 = 100320
+    //as per weiToFNU, token cost is 1 FNU = 1 ETH
+    await fiinuCrowdSale.sendTransaction({from: investor_4, value: 100000 * ONEETHER});
+    var investor_4_balance = await fiinuToken.balanceOf(investor_4);
+    assert.equal(investor_4_balance.toNumber(), 100000000000, "Investor 4 should have 100000.000000 tokens");
+
+  });
+
+  it("5. checks token allocations after targetRaisedWei is met", async () => {
+    var fiinuCrowdSale = await FiinuCrowdSale.deployed();
+    var fiinuToken = await FiinuToken.deployed();
+
+    //Purchase an amount after targetRaisedWei has reached
+    //raisedWei is 100000 + 100 + 200 + 10 + 10 = 100320
     //targetRaisedWei is 100000
     //as per weiToFNU, token cost is 1 FNU = targetRaisedWei / raisedWei
     //(100000 / 100320) * 100000 = 99681.020733 (6 d.p.)
     await fiinuCrowdSale.sendTransaction({from: investor_4, value: 100000 * ONEETHER});
     var investor_4_balance = await fiinuToken.balanceOf(investor_4);
-    assert.equal(investor_4_balance.toNumber(), 99681020733, "Investor 4 should have 99681.020733 tokens");
+    assert.equal(investor_4_balance.toNumber(), 199681020733, "Investor 4 should have 199681.020733 tokens");
 
   });
-
 
 });
