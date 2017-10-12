@@ -179,9 +179,11 @@ contract FiinuCrowdSale is TokenController, Investors {
         require(approvedInvestors[msg.sender].max >= approvedInvestors[msg.sender].total.add(msg.value)); // investment is not breaching max approved investment amount
         require(maxRaisedWei >= raisedWei.add(msg.value)); // investment is not breaching max raising limit
 
+        uint _fnu = weiToFNU(msg.value);
+        require(_fnu > 0);
+        
         raisedWei = raisedWei.add(msg.value);
         approvedInvestors[msg.sender].total = approvedInvestors[msg.sender].total.add(msg.value); // increase total invested
-        uint _fnu = weiToFNU(msg.value);
         mint(msg.sender, _fnu); // Mint the tokens
         wallet.transfer(msg.value); // Move ETH to multi sig wallet
         Investment(msg.sender, msg.value, _fnu); // Announce investment
