@@ -30,11 +30,6 @@ contract('Check PreSale and Sale', function (accounts) {
     await fiinuCrowdSale.manageInvestors(investor_3, 200, {from: accounts[2]});
     await fiinuCrowdSale.manageInvestors(investor_4, 400000, {from: accounts[2]});
 
-    //investor_1 can't invest under 100 ether
-    await assertFail(async () => {
-      await fiinuCrowdSale.sendTransaction({from: investor_1, value: 99 * ONEETHER});
-    });
-
     //investor_2 can't invest as they don't have a high enough allocation (100 ether)
     await assertFail(async () => {
       await fiinuCrowdSale.sendTransaction({from: investor_2, value: 100 * ONEETHER});
