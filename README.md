@@ -17,7 +17,6 @@ This is the starting point of the FNU smart-contract.
 Trading of the FNU is not allowed.
 We are accepting investments from registered investors, who have passed our AML and KYC requirements - we white-label their addresses, including max investment limit.
 Price of FNU has 33% bonus, 0.75 ETH = 1 FNU (0.75 + 33% = 1).
-Minimum investment amount is 100 ETH.
 Maximum ICO raise gap is 400'000 ETH.
 
 ### IcoOpen
@@ -25,7 +24,6 @@ Trading of the FNU is not allowed.
 We are accepting investments from registered investors, who have passed our AML and KYC requirements - we white-label their addresses, including max investment limit.
 Price of FNU is calculated by formula = max(1, total_raised/100'000)
 Up to 100'000 ETH raised against the price of 1 ETH = 1 FNU, onwards the price will be calculated dynamically (in general and because of the max rais gap, the price will start from 1 ETH and will go up to a maximum of 4 ETH per 1 FNU).
-There is no minimum investment requirement.
 Maximum ICO raise gap is 400'000 ETH.
 
 ### IcoClosed
@@ -54,14 +52,12 @@ These contracts use the Truffle build environment.
 ### Requirements
 
 1. This repo uses truffle, npm and testrpc:  
-https://nodejs.org/en/ (v8.4.0)  
-http://truffle.readthedocs.io/en/beta/getting_started/installation/
+https://nodejs.org/en/ (v8.4.0) 
+http://truffle.readthedocs.io/en/beta/getting_started/installation/  
 https://github.com/ethereumjs/testrpc
 
 1. Run `npm install` in the repo root directory.
-
 1. Run `npm install -g ethereumjs-testrpc`.
-
 1. Run testrpc:  
 `testrpc --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e1c, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e11, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e12, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e13, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e14, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e15, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e16, 1000000000000000000000000" --account="0xf84e9b54634b7a970ea64e11443b466758d33ae7ef3f9066b52457fc27a37e17, 1000000000000000000000000"`
 
@@ -71,32 +67,32 @@ There are comprehensive test cases using the Truffle framework.
 
 Execute `truffle test` (compile warnings are expected):
 ```
+  Contract: Check Initialisation
+    ✓ 0. check initialized token and crowdsale (97ms)
+
+  Contract: Check Investor Intialisation
+    ✓ 0. initialises two admin addresses (76ms)
+    ✓ 1. adds two investors (85ms)
+
+  Contract: Check PreSale and Sale
+    ✓ 0. investor purchases during presale (508ms)
+    ✓ 1. checks can't transfer during presale (66ms)
+    ✓ 2. investor purchases during sale (346ms)
+    ✓ 3. checks can't transfer during sale
+    ✓ 4. checks token allocations on targetRaisedWei reach transaction (120ms)
+    ✓ 5. checks token allocations after targetRaisedWei is met (121ms)
+
+  Contract: Check Staff Allocations and Refund
+    ✓ 0. investor make purchases (828ms)
+    ✓ 1. ICO successful, staff get tokens (539ms)
+    ✓ 2. Bank license failure, staff lose tokens, investers get refunds (2518ms)
+
+  Contract: Check Token Transfers And Profit Sharing
+    ✓ 0. investor make purchases, bank license issued (1354ms)
+    ✓ 1. check tokens can be transferred (89ms)
+    ✓ 2. Dividend paid and shared between token holders (2531ms)
 Contract: Check Initialisation
   ✓ 0. check initialized token and crowdsale (150ms)
-
-Contract: Check PreSale and Sale
-  ✓ 0. investor purchases during presale (552ms)
-  ✓ 1. checks can't transfer during presale
-  ✓ 2. investor purchases during sale (375ms)
-  ✓ 3. checks can't transfer during sale
-  ✓ 4. checks token allocations after targetRaisedWei is met (132ms)
-
-Contract: Check Investor Intialisation
-  ✓ 0. initialises two admin addresses (56ms)
-  ✓ 1. adds two investors (52ms)
-
-Contract: Check Staff Allocations and Refund
-  ✓ 0. investor make purchases (705ms)
-  ✓ 1. ICO successful, staff get tokens (597ms)
-  ✓ 2. Bank license failure, staff lose tokens, investers get refunds (2095ms)
-
-Contract: Check Token Transfers And Profit Sharing
-  ✓ 0. investor make purchases, bank license issued (1269ms)
-  ✓ 1. check tokens can be transferred (48ms)
-  ✓ 2. Dividend paid and shared between token holders (1691ms)
-
-
-14 passing (8s)
 ```
 
 ## Deployment
