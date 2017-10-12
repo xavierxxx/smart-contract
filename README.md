@@ -91,8 +91,8 @@ Execute `truffle test` (compile warnings are expected):
     ✓ 0. investor make purchases, bank license issued (1354ms)
     ✓ 1. check tokens can be transferred (89ms)
     ✓ 2. Dividend paid and shared between token holders (2531ms)
-Contract: Check Initialisation
-  ✓ 0. check initialized token and crowdsale (150ms)
+
+15 passing (10s)
 ```
 
 ## Deployment
