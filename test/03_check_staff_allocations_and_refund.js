@@ -40,6 +40,7 @@ contract('Check Staff Allocations and Refund', function (accounts) {
     await fiinuCrowdSale.sendTransaction({from: investor_2, value: 10 * ONEETHER});
 
     await fiinuCrowdSale.sendTransaction({from: investor_4, value: 100000 * ONEETHER});
+    await fiinuCrowdSale.sendTransaction({from: investor_4, value: 100000 * ONEETHER});
 
     var investor_1_balance = await fiinuToken.balanceOf(investor_1);
     var investor_2_balance = await fiinuToken.balanceOf(investor_2);
@@ -49,7 +50,7 @@ contract('Check Staff Allocations and Refund', function (accounts) {
     assert.equal(investor_1_balance.toNumber(), 133333333 + 10000000, "Investor 1 should have 143.333333 tokens");
     assert.equal(investor_2_balance.toNumber(), 10000000, "Investor 2 should have 10 tokens");
     assert.equal(investor_3_balance.toNumber(), 266666666, "Investor 3 should still have 266.666666 tokens");
-    assert.equal(investor_4_balance.toNumber(), 99681020733, "Investor 4 should have 99681.020733 tokens");
+    assert.equal(investor_4_balance.toNumber(), 100000000000 + 99681020733, "Investor 4 should have 199681.020733 tokens");
 
 });
 
@@ -61,14 +62,14 @@ it("1. ICO successful, staff get tokens", async () => {
     await fiinuCrowdSale.Milestone_CloseTheIco("Closing Sale");
     await fiinuCrowdSale.Milestone_IcoSuccessful("ICO Successful");
 
-    //Total tokens allocation is: 143.333333 + 10 + 266.666666 + 99681.020733 = 100101.020732
-    //Total staff allocation is 10% of 100101.020732 = 10010.102073
+    //Total tokens allocation is: 143.333333 + 10 + 266.666666 + 199681.020733 = 200101.020732
+    //Total staff allocation is 10% of 200101.020732 = 20010.102073
     //Staff allocations are:
-    //staff_1: 81% of 100101.020732 = 8108.182679
-    //staff_2: 9% of 100101.020732 = 900.909186
-    //staff_3: 1.5% of 100101.020732 = 150.151531
-    //staff_4: 1.5% of 100101.020732 = 150.151531
-    //staff_5: 7% of 100101.020732 = 700.707145
+    //staff_1: 81% of 20010.102073 = 16208.182679
+    //staff_2: 9% of 20010.102073 = 1800.909186
+    //staff_3: 1.5% of 20010.102073 = 300.151531
+    //staff_4: 1.5% of 20010.102073 = 300.151531
+    //staff_5: 7% of 20010.102073 = 1400.707145
 
     var staff_1_balance = await fiinuToken.balanceOf(await fiinuCrowdSale.staff_1.call());
     var staff_2_balance = await fiinuToken.balanceOf(await fiinuCrowdSale.staff_2.call());
@@ -76,11 +77,11 @@ it("1. ICO successful, staff get tokens", async () => {
     var staff_4_balance = await fiinuToken.balanceOf(await fiinuCrowdSale.staff_4.call());
     var owner_balance = await fiinuToken.balanceOf(owner);
 
-    assert.equal(staff_1_balance.toNumber(), 8108182679, "Staff 1 should have 8108.182679 tokens");
-    assert.equal(staff_2_balance.toNumber(), 900909186, "Staff 2 should have 900.909186 tokens");
-    assert.equal(staff_3_balance.toNumber(), 150151531, "Staff 3 should still have 150.1515310 tokens");
-    assert.equal(staff_4_balance.toNumber(), 150151531, "Staff 4 should have 150.1515310 tokens");
-    assert.equal(owner_balance.toNumber(), 700707145, "Owner should have 7007.071450 tokens");
+    assert.equal(staff_1_balance.toNumber(), 16208182679, "Staff 1 should have 16208.182679 tokens");
+    assert.equal(staff_2_balance.toNumber(), 1800909186, "Staff 2 should have 1800.909186 tokens");
+    assert.equal(staff_3_balance.toNumber(), 300151531, "Staff 3 should still have 300.151531 tokens");
+    assert.equal(staff_4_balance.toNumber(), 300151531, "Staff 4 should have 300.151531 tokens");
+    assert.equal(owner_balance.toNumber(), 1400707145, "Owner should have 1400.707145 tokens");
 
 });
 
@@ -89,7 +90,7 @@ it("2. Bank license failure, staff lose tokens, investers get refunds", async ()
     var fiinuCrowdSale = await FiinuCrowdSale.deployed();
     var fiinuToken = await FiinuToken.deployed();
     //Provide some refundable funds - 50% of funds are refunded
-    await fiinuCrowdSale.refund({from: admin_1, value: (100320 / 2) * ONEETHER});
+    await fiinuCrowdSale.refund({from: admin_1, value: (200320 / 2) * ONEETHER});
 
     await fiinuCrowdSale.Milestone_BankLicenseFailed("Bank License Failed");
   
@@ -112,7 +113,7 @@ it("2. Bank license failure, staff lose tokens, investers get refunds", async ()
     //invester_1 invested 110
     //invester_2 invested 10
     //invester_3 invested 200
-    //invester_4 invested 100000
+    //invester_4 invested 200000
     var investor_1_end_ether = await web3.eth.getBalance(investor_1);
     var investor_2_end_ether = await web3.eth.getBalance(investor_2);
     var investor_3_end_ether = await web3.eth.getBalance(investor_3);
@@ -121,7 +122,7 @@ it("2. Bank license failure, staff lose tokens, investers get refunds", async ()
     assert.equal(investor_1_end_ether.sub(investor_1_start_ether).toNumber(), 55 * ONEETHER, "investor_1 should receive 55 ETH back");
     assert.equal(investor_2_end_ether.sub(investor_2_start_ether).toNumber(), 5 * ONEETHER, "investor_1 should receive 5 ETH back");
     assert.equal(investor_3_end_ether.sub(investor_3_start_ether).toNumber(), 100 * ONEETHER, "investor_1 should receive 100 ETH back");
-    assert.equal(investor_4_end_ether.sub(investor_4_start_ether).toNumber(), 50000 * ONEETHER, "investor_1 should receive 50000 ETH back");
+    assert.equal(investor_4_end_ether.sub(investor_4_start_ether).toNumber(), 100000 * ONEETHER, "investor_1 should receive 50000 ETH back");
 
     //Everyone has 0 balance now
     var investor_1_balance = await fiinuToken.balanceOf(investor_1);
