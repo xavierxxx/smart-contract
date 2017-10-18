@@ -41,9 +41,9 @@ contract ProfitSharing is Ownable {
   function depositDividend() payable
   onlyOwner
   {
-    uint256 currentSupply = token.totalSupplyAt(block.number);
     uint256 dividendIndex = dividends.length;
     uint256 blockNumber = SafeMath.sub(block.number, 1);
+    uint256 currentSupply = token.totalSupplyAt(blockNumber);
     dividends.push(
       Dividend(
         blockNumber,
@@ -71,13 +71,15 @@ contract ProfitSharing is Ownable {
       msg.sender.transfer(claim);
       DividendClaimed(msg.sender, _dividendIndex, claim);
     }
+    if (dividendsClaimed[msg.sender] == _dividendIndex) {
+      dividendsClaimed[msg.sender] = SafeMath.add(_dividendIndex, 1);
+    }
   }
 
   function claimDividendAll() public {
     require(dividendsClaimed[msg.sender] < dividends.length);
     for (uint i = dividendsClaimed[msg.sender]; i < dividends.length; i++) {
       if ((dividends[i].claimed[msg.sender] == false) && (dividends[i].recycled == false)) {
-        dividendsClaimed[msg.sender] = SafeMath.add(i, 1);
         claimDividend(i);
       }
     }
